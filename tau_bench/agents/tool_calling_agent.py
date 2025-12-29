@@ -36,6 +36,7 @@ class ToolCallingAgent(Agent):
             {"role": "system", "content": self.wiki},
             {"role": "user", "content": obs},
         ]
+        # import pdb; pdb.set_trace()
         for _ in range(max_num_steps):
             res = completion(
                 messages=messages,

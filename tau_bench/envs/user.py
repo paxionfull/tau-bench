@@ -5,6 +5,7 @@ import enum
 from litellm import completion
 
 from typing import Optional, List, Dict, Any, Union
+import random
 
 
 class BaseUserSimulationEnv(abc.ABC):
@@ -44,8 +45,25 @@ class LLMUserSimulationEnv(BaseUserSimulationEnv):
         self.reset()
 
     def generate_next_message(self, messages: List[Dict[str, Any]]) -> str:
+        if self.model == "random":
+            # 增加模型避免rate limit
+            model_candidates = [
+                "gpt-oss-120b",
+                "deepseek-v3.2",
+                "deepseek-v3.1",
+                "deepseek-v3.1-terminus",
+                "qwen3-next-80b-a3b-instruct",
+                "qwen2.5-32b-instruct",
+                "qwen2.5-coder-32b-instruct",
+                "qwen3-235b-a22b-instruct-2507",
+                "qwen2.5-72b-instruct",
+            ]
+            model_name = random.choice(model_candidates)
+        else:
+            model_name = self.model
         res = completion(
-            model=self.model, custom_llm_provider=self.provider, messages=messages
+            model=model_name, custom_llm_provider=self.provider, messages=messages,
+            max_tokens=1024
         )
         message = res.choices[0].message
         self.messages.append(message.model_dump())
@@ -214,7 +232,7 @@ def verify(
     )
     prompt = f"""You are a supervisor of the Agent in the conversation. You are given a Transcript of a conversation between a Customer and an Agent. The Customer has generated a Response, and you need to verify if it is satisfactory (true) or not (false).
 Your answer will be parsed, so do not include any other text than the classification (true or false).
-    
+
 # Transcript:
 {transcript}
 
@@ -244,7 +262,7 @@ def reflect(
     prompt = f"""You are a supervisor of the Agent in the conversation. You are given a Transcript of a conversation between a (simulated) Customer and an Agent. The Customer generated a Response that was marked as unsatisfactory by you.
 You need to generate a Reflection on what went wrong in the conversation, and propose a new Response that should fix the issues.
 Your answer will be parsed, so do not include any other text than the classification (true or false).
-    
+
 # Transcript:
 {transcript}
 
