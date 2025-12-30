@@ -82,9 +82,9 @@ class Env(object):
         self.data = self.data_load_func()
         self.task = self.tasks[task_index]
         self.actions = []
-        initial_observation = self.user.reset(instruction=self.task.instruction)
+        initial_observation, model_name = self.user.reset(instruction=self.task.instruction)
         return EnvResetResponse(
-            observation=initial_observation, info=EnvInfo(task=self.task, source="user")
+            observation=initial_observation, model_name=model_name, info=EnvInfo(task=self.task, source="user")
         )
 
     def step(self, action: Action) -> EnvResponse:
@@ -93,11 +93,13 @@ class Env(object):
         info = EnvInfo(task=self.task)
         reward = 0
         done = False
+        model_name = None
         if action.name == RESPOND_ACTION_NAME:
-            observation = self.user.step(action.kwargs["content"])
+            observation, model_name =  self.user.step(action.kwargs["content"])
             info.source = "user"
             if observation is None:
-                done = True
+                done = False
+                observation = ""
             else:
                 done = "###STOP###" in observation
         elif action.name in self.tools_map:
@@ -119,7 +121,7 @@ class Env(object):
             reward = reward_res.reward
             info.reward_info = reward_res
             info.user_cost = self.user.get_total_cost()
-        return EnvResponse(observation=observation, reward=reward, done=done, info=info)
+        return EnvResponse(observation=observation, reward=reward, done=done, info=info, model_name=model_name)
 
     def get_data_hash(self) -> str:
         return consistent_hash(to_hashable(self.data))

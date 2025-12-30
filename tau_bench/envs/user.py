@@ -48,27 +48,31 @@ class LLMUserSimulationEnv(BaseUserSimulationEnv):
         if self.model == "random":
             # 增加模型避免rate limit
             model_candidates = [
-                "gpt-oss-120b",
+                # deepseek
+                "deepseek-v3",
                 "deepseek-v3.2",
                 "deepseek-v3.1",
                 "deepseek-v3.1-terminus",
-                "qwen3-next-80b-a3b-instruct",
+                # qwen
+                "qwen2.5-72b-instruct",
                 "qwen2.5-32b-instruct",
                 "qwen2.5-coder-32b-instruct",
+                "qwen3-next-80b-a3b-instruct",
                 "qwen3-235b-a22b-instruct-2507",
-                "qwen2.5-72b-instruct",
+                "qwen3-coder-480b-a35b-instruct",
             ]
             model_name = random.choice(model_candidates)
         else:
             model_name = self.model
         res = completion(
             model=model_name, custom_llm_provider=self.provider, messages=messages,
-            max_tokens=1024
+            max_tokens=1024,
+            extra_body={"enable_thinking": False},
         )
         message = res.choices[0].message
         self.messages.append(message.model_dump())
         self.total_cost = res._hidden_params["response_cost"]
-        return message.content
+        return message.content, model_name
 
     def build_system_prompt(self, instruction: Optional[str]) -> str:
         instruction_display = (

@@ -54,11 +54,13 @@ class EnvResponse(BaseModel):
     reward: float
     done: bool
     info: EnvInfo
+    model_name: Optional[str] = None
 
 
 class EnvResetResponse(BaseModel):
     observation: str
     info: EnvInfo
+    model_name: Optional[str] = None
 
 
 class EnvRunResult(BaseModel):
