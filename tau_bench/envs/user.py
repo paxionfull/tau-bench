@@ -48,9 +48,15 @@ class LLMUserSimulationEnv(BaseUserSimulationEnv):
         if self.model == "random":
             # 增加模型避免rate limit
             model_candidates = [
+                # gpt
+                "gpt-oss-120b",
+                "gpt-oss-20b",
+                # glm
+                "glm-4.7",
+                "glm-4.6",
+                "glm-4.5",
                 # deepseek
-                "deepseek-v3",
-                "deepseek-v3.2",
+                # "deepseek-v3.2",  # NOTE: 推理速度比其他模型慢一倍，暂时不用
                 "deepseek-v3.1",
                 "deepseek-v3.1-terminus",
                 # qwen
@@ -67,7 +73,7 @@ class LLMUserSimulationEnv(BaseUserSimulationEnv):
         res = completion(
             model=model_name, custom_llm_provider=self.provider, messages=messages,
             max_tokens=1024,
-            extra_body={"enable_thinking": False},
+            extra_body={"enable_thinking": False, "reasoning_effort": "low"},
         )
         message = res.choices[0].message
         self.messages.append(message.model_dump())
